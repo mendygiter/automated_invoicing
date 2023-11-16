@@ -1,11 +1,10 @@
 const axios = require('axios');
 const config = require('./config').smartsuite;
-const cron = require("node-cron")
 
 const smartsuiteApi = axios.create({
     baseURL: config.apiUrl,
     headers: {
-        "Autherazation": "Token ${config.apiKey}",
+        "Autheraization": "Token ${config.apiKey}",
         "Account-Id": config.accountId
     }
 });
@@ -22,12 +21,4 @@ const apiClient = {
     },
 }
 
-monthlyCheck: function() {
-    cron.schedule("0 0 01 * *", async () => {
-        console.log("Running scheduled table changes");
-        try {
-            const rows  = await this.getRowsFromTable();
-            
-        }
-    })
-}
+module.exports = apiClient;
