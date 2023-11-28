@@ -33,7 +33,7 @@ async function getAccountData() {
 }
 
 async function getCombinedDataForQuickBooks() {
-    const invoiceData = invoiceData,map(invoice => {
+    const invoiceData = invoiceData.map(invoice => {
         const accountInfo = accountDataMap.get(invoice.accountId);
         return {
             ...invoice,
