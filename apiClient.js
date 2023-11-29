@@ -4,7 +4,7 @@ const config = require('./config').smartsuite;
 const smartsuiteApi = axios.create({
     baseURL: config.apiUrl,
     headers: {
-        "Autheraization": "Token ${config.apiKey}",
+        "Authorization": "Token ${config.apiKey}",
         "Account-Id": config.accountId
     }
 });
@@ -20,28 +20,48 @@ async function getRowsFromTable(tableId) {
 }
 
 async function getInvoiceData() {
-    const invoiceRows = await getRowsFromTable(config.invoiceTableId); return invoiceRows.filter(row => row.status === "Send Invocie");
+    const invoiceRows = await getRowsFromTable(config.invoiceTableId); 
+    return invoiceRows.filter(row => row.status === "Send Invocie");
+}
+
+async function groupInvoicesByAccount() {
+    const invoiceData = await getInvoiceData();
+    const groupedInvoices = {};
+    
+    invoiceData.forEach(invoice => {
+        const accountLink = invoice["Link To Accounts"];
+        if (!groupedInvoices[accountLink]) {
+            groupedInvoices[accountLink] = [];
+        }
+        groupedInvoices[accountLink].push(invoice);
+    });
+
+    return groupedInvoices;
 }
 
 async function getAccountData() {
     const accountRows = await getRowsFromTable(config.accountTableId);
     const acountDataMap = new Map();
 
-    accountRows.forEach(row => accountDataMap.set(row.accountId, row));
+    accountRows.forEach(row => accountDataMap.set(row.Account, row));
 
     return accountDataMap;
 }
 
 async function getCombinedDataForQuickBooks() {
-    const invoiceData = invoiceData.map(invoice => {
-        const accountInfo = accountDataMap.get(invoice.accountId);
+    const groupedInvoices = await groupInvoicesByAccount();
+    const accountDataMap = await getAccountData();
+
+    const combinedData = Object.keys(groupedInvoices).map(accountKey => {
+        const invoices = groupedInvoices[accountKey];
+        const accountInfo = accountDataMap.get(accountKey) || {};
+
         return {
-            ...invoice,
-            accountInfo
+            accountInfo,
+            invoices
         };
     });
-
-    return invoiceData;
+    return combinedData;
 }
 
 module.esports = {
